@@ -12,6 +12,8 @@ import (
 )
 
 func TestHelloWorld(t *testing.T) {
+	t.Parallel()
+
 	assert.Equal(t, "hello world", helloworld.HelloWorld())
 }
 
