@@ -23,6 +23,7 @@ So you wanna learn a new programming language, huh?
 
 - Static asset web server
 - Dynamic DNS updater client
+- GraphQL CRUD server
 - Implementation of pgping https://github.com/sapslaj/pgping
 - Kubernetes manifest generator
 - Websockets chat server/client
