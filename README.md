@@ -27,3 +27,5 @@ So you wanna learn a new programming language, huh?
 - Implementation of pgping https://github.com/sapslaj/pgping
 - Kubernetes manifest generator
 - Websockets chat server/client
+- [Monkey](https://interpreterbook.com/#the-monkey-programming-language) interpreter
+- [RealWorld](https://github.com/gothinkster/realworld) implementation.
