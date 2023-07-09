@@ -59,3 +59,24 @@ let 838383;
 		assert.ErrorContains(t, err, "expected next token to be")
 	}
 }
+
+func TestReturnStatements(t *testing.T) {
+	input := `
+return 5;
+return 10;
+return 993322;
+`
+
+	l := lexer.New(input)
+	p := parser.New(l)
+
+	program := p.ParseProgram()
+	assert.Len(t, p.Errors(), 0, "parser has %d errors: %v", len(p.Errors()), p.Errors())
+	assert.NotNil(t, program)
+	assert.Len(t, program.Statements, 3)
+
+	for _, stmt := range program.Statements {
+		returnStmt := stmt.(*ast.ReturnStatement)
+		assert.Equal(t, "return", returnStmt.TokenLiteral())
+	}
+}
