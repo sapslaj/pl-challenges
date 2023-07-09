@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/sapslaj/pl-challenges/go/monkey/ast"
 	"github.com/sapslaj/pl-challenges/go/monkey/lexer"
@@ -47,6 +48,7 @@ func New(l *lexer.Lexer) *Parser {
 	}
 
 	p.RegisterPrefix(token.IDENT, p.parseIdentifier)
+	p.RegisterPrefix(token.INT, p.parseIntegerLiteral)
 
 	p.NextToken()
 	p.NextToken()
@@ -160,6 +162,21 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	}
 
 	return stmt
+}
+
+func (p *Parser) parseIntegerLiteral() ast.Expression {
+	lit := &ast.IntegerLiteral{
+		Token: p.curToken,
+	}
+
+	value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
+	if err != nil {
+		p.newParseError("could not parse %q as integer: %v", p.curToken.Literal, err)
+		return nil
+	}
+
+	lit.Value = value
+	return lit
 }
 
 func (p *Parser) ParseStatement() ast.Statement {
