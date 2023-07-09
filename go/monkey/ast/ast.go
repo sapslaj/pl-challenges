@@ -120,6 +120,27 @@ func (pe *PrefixExpression) String() string {
 	return b.String()
 }
 
+type InfixExpression struct {
+	Token    token.Token
+	Left     Expression
+	Operator string
+	Right    Expression
+}
+
+func (ie *InfixExpression) ExpressionNode()      {}
+func (ie *InfixExpression) TokenLiteral() string { return ie.Token.Literal }
+func (ie *InfixExpression) String() string {
+	var b strings.Builder
+	b.WriteString("(")
+	b.WriteString(ie.Left.String())
+	b.WriteString(" ")
+	b.WriteString(ie.Operator)
+	b.WriteString(" ")
+	b.WriteString(ie.Right.String())
+	b.WriteString(")")
+	return b.String()
+}
+
 type IntegerLiteral struct {
 	Token token.Token
 	Value int64
