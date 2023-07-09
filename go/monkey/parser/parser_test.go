@@ -10,7 +10,7 @@ import (
 	"github.com/sapslaj/pl-challenges/go/monkey/parser"
 )
 
-func TestLetStatements(t *testing.T) {
+func TestValidLetStatements(t *testing.T) {
 	input := `
 let x = 5;
 let y = 10;
@@ -21,6 +21,7 @@ let foobar = 838383;
 	p := parser.New(l)
 
 	program := p.ParseProgram()
+	assert.Len(t, p.Errors(), 0, "parser has %d errors: %v", len(p.Errors()), p.Errors())
 	assert.NotNil(t, program)
 	assert.Len(t, program.Statements, 3)
 
@@ -38,5 +39,23 @@ let foobar = 838383;
 		letStmt := stmt.(*ast.LetStatement)
 		assert.Equal(t, tt.expectedIdentifier, letStmt.Name.Value)
 		assert.Equal(t, tt.expectedIdentifier, letStmt.Name.TokenLiteral())
+	}
+}
+
+func TestInvalidLetStatements(t *testing.T) {
+	input := `
+let x 5;
+let = 10;
+let 838383;
+`
+
+	l := lexer.New(input)
+	p := parser.New(l)
+
+	p.ParseProgram()
+	errs := p.Errors()
+	assert.Len(t, errs, 3)
+	for _, err := range errs {
+		assert.ErrorContains(t, err, "expected next token to be")
 	}
 }

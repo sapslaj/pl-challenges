@@ -1,15 +1,25 @@
 package parser
 
 import (
+	"fmt"
+
 	"github.com/sapslaj/pl-challenges/go/monkey/ast"
 	"github.com/sapslaj/pl-challenges/go/monkey/lexer"
 	"github.com/sapslaj/pl-challenges/go/monkey/token"
 )
 
+type ParseError error
+
+func NewParseError(format string, a ...any) ParseError {
+	err := fmt.Errorf(format, a...)
+	return ParseError(err)
+}
+
 type Parser struct {
 	l         *lexer.Lexer
 	curToken  token.Token
 	peekToken token.Token
+	errors    []ParseError
 }
 
 func New(l *lexer.Lexer) *Parser {
@@ -19,6 +29,14 @@ func New(l *lexer.Lexer) *Parser {
 	p.NextToken()
 	p.NextToken()
 	return p
+}
+
+func (p *Parser) newParseError(format string, a ...any) {
+	p.errors = append(p.errors, NewParseError(format, a...))
+}
+
+func (p *Parser) Errors() []ParseError {
+	return p.errors
 }
 
 func (p *Parser) NextToken() {
@@ -39,6 +57,9 @@ func (p *Parser) ExpectPeek(t token.TokenType) bool {
 		p.NextToken()
 		return true
 	}
+	p.newParseError(
+		"expected next token to be %s, got %s instead", t, p.peekToken.Type,
+	)
 	return false
 }
 
