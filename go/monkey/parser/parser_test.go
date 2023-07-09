@@ -54,10 +54,7 @@ let 838383;
 
 	p.ParseProgram()
 	errs := p.Errors()
-	assert.Len(t, errs, 3)
-	for _, err := range errs {
-		assert.ErrorContains(t, err, "expected next token to be")
-	}
+	assert.Len(t, errs, 4)
 }
 
 func TestReturnStatements(t *testing.T) {
@@ -97,7 +94,7 @@ func TestIdentifierExpression(t *testing.T) {
 	assert.Equal(t, "foobar", ident.TokenLiteral())
 }
 
-func TestIntegerLiteralExpression(t *testing.T) {
+func TestValidIntegerLiteralExpression(t *testing.T) {
 	input := "5;"
 
 	l := lexer.New(input)
@@ -112,4 +109,30 @@ func TestIntegerLiteralExpression(t *testing.T) {
 	literal := stmt.Expression.(*ast.IntegerLiteral)
 	assert.Equal(t, "5", literal.TokenLiteral())
 	assert.Equal(t, int64(5), literal.Value)
+}
+
+func TestParsingPrefixExpressions(t *testing.T) {
+	tests := []struct {
+		input    string
+		operator string
+		value    int64
+	}{
+		{"!5", "!", 5},
+		{"-15;", "-", 15},
+	}
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := parser.New(l)
+
+		program := p.ParseProgram()
+		assert.Len(t, p.Errors(), 0, "parser has %d errors: %v", len(p.Errors()), p.Errors())
+		assert.NotNil(t, program)
+		assert.Len(t, program.Statements, 1)
+
+		stmt := program.Statements[0].(*ast.ExpressionStatement)
+		exp := stmt.Expression.(*ast.PrefixExpression)
+		assert.Equal(t, tt.operator, exp.Operator)
+		right := exp.Right.(*ast.IntegerLiteral)
+		assert.Equal(t, tt.value, right.Value)
+	}
 }

@@ -103,6 +103,23 @@ func (es *ExpressionStatement) String() string {
 	return ""
 }
 
+type PrefixExpression struct {
+	Token    token.Token
+	Operator string
+	Right    Expression
+}
+
+func (pe *PrefixExpression) ExpressionNode()      {}
+func (pe *PrefixExpression) TokenLiteral() string { return pe.Token.Literal }
+func (pe *PrefixExpression) String() string {
+	var b strings.Builder
+	b.WriteString("(")
+	b.WriteString(pe.Operator)
+	b.WriteString(pe.Right.String())
+	b.WriteString(")")
+	return b.String()
+}
+
 type IntegerLiteral struct {
 	Token token.Token
 	Value int64
