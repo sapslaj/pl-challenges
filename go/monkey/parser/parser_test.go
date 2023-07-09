@@ -80,3 +80,19 @@ return 993322;
 		assert.Equal(t, "return", returnStmt.TokenLiteral())
 	}
 }
+
+func TestIdentifierExpression(t *testing.T) {
+	input := "foobar;"
+
+	l := lexer.New(input)
+	p := parser.New(l)
+
+	program := p.ParseProgram()
+	assert.Len(t, p.Errors(), 0, "parser has %d errors: %v", len(p.Errors()), p.Errors())
+	assert.NotNil(t, program)
+	assert.Len(t, program.Statements, 1)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	ident := stmt.Expression.(*ast.Identifier)
+	assert.Equal(t, "foobar", ident.TokenLiteral())
+}

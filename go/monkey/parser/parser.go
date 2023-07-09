@@ -15,17 +15,39 @@ func NewParseError(format string, a ...any) ParseError {
 	return ParseError(err)
 }
 
+type PrefixParseFn func() ast.Expression
+type InfixParseFn func(ast.Expression) ast.Expression
+
+type Precedence int
+
+const (
+	_ Precedence = iota
+	LOWEST
+	EQUALS
+	LESSGREATER
+	SUM
+	PRODUCT
+	PREFIX
+	CALL
+)
+
 type Parser struct {
-	l         *lexer.Lexer
-	curToken  token.Token
-	peekToken token.Token
-	errors    []ParseError
+	l              *lexer.Lexer
+	curToken       token.Token
+	peekToken      token.Token
+	errors         []ParseError
+	prefixParseFns map[token.TokenType]PrefixParseFn
+	infixParseFns  map[token.TokenType]InfixParseFn
 }
 
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{
-		l: l,
+		l:              l,
+		prefixParseFns: make(map[token.TokenType]PrefixParseFn),
 	}
+
+	p.RegisterPrefix(token.IDENT, p.parseIdentifier)
+
 	p.NextToken()
 	p.NextToken()
 	return p
@@ -37,6 +59,14 @@ func (p *Parser) newParseError(format string, a ...any) {
 
 func (p *Parser) Errors() []ParseError {
 	return p.errors
+}
+
+func (p *Parser) RegisterPrefix(tokenType token.TokenType, fn PrefixParseFn) {
+	p.prefixParseFns[tokenType] = fn
+}
+
+func (p *Parser) RegisterInfix(tokenType token.TokenType, fn InfixParseFn) {
+	p.infixParseFns[tokenType] = fn
 }
 
 func (p *Parser) NextToken() {
@@ -61,6 +91,22 @@ func (p *Parser) ExpectPeek(t token.TokenType) bool {
 		"expected next token to be %s, got %s instead", t, p.peekToken.Type,
 	)
 	return false
+}
+
+func (p *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{
+		Token: p.curToken,
+		Value: p.curToken.Literal,
+	}
+}
+
+func (p *Parser) parseExpression(precedence Precedence) ast.Expression {
+	prefix := p.prefixParseFns[p.curToken.Type]
+	if prefix == nil {
+		return nil
+	}
+	leftExp := prefix()
+	return leftExp
 }
 
 func (p *Parser) parseLetStatement() *ast.LetStatement {
@@ -102,6 +148,20 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	return stmt
 }
 
+func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	stmt := &ast.ExpressionStatement{
+		Token: p.curToken,
+	}
+
+	stmt.Expression = p.parseExpression(LOWEST)
+
+	if p.PeekTokenIs(token.SEMICOLON) {
+		p.NextToken()
+	}
+
+	return stmt
+}
+
 func (p *Parser) ParseStatement() ast.Statement {
 	switch p.curToken.Type {
 	case token.LET:
@@ -109,7 +169,7 @@ func (p *Parser) ParseStatement() ast.Statement {
 	case token.RETURN:
 		return p.parseReturnStatement()
 	default:
-		return nil
+		return p.parseExpressionStatement()
 	}
 }
 
